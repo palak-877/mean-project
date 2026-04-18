@@ -1,3 +1,4 @@
+const Wisdom = require("./models/Wisdom");
 const Message = require("./models/Message");
 const express = require('express');
 const mongoose = require('mongoose');
@@ -20,13 +21,17 @@ app.get('/', (req, res) => {
 app.post("/message", async (req, res) => {
   try {
     const { question } = req.body;
+    const userQuestion = question.toLowerCase();
 
-    // simple logic (your "AI" for now)
     let answer = "I am still learning...";
 
-    if (question.toLowerCase().includes("jealous")) {
-      answer = "Jealousy comes from comparison. Focus on your growth.";
-    }
+    const wisdomData = await Wisdom.find();
+
+    wisdomData.forEach(item => {
+      if (userQuestion.includes(item.keyword)) {
+        answer = item.teaching;
+      }
+    });
 
     const newMsg = new Message({
       question,

@@ -1,94 +1,135 @@
-const Wisdom = require("./models/Wisdom");
-const Message = require("./models/Message");
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+// Import required modules
+const express = require("express"); // framework to create server
+const mongoose = require("mongoose"); // to connect MongoDB
+const cors = require("cors"); // allows frontend to communicate
+
+require("dotenv").config(); // to use environment variables
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(express.json()); // parses incoming JSON data
+app.use(cors()); // enables cross-origin requests
 
-// ✅ MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/wisdomgpt')
-.then(() => console.log("MongoDB connected"))
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
-app.get('/', (req, res) => {
-  res.send("Server running");
+const User = require("./models/User");
+const bcrypt = require("bcrypt");
+
+// Signup route
+app.post("/signup", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  // Hash password before saving
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = new User({
+    name,
+    email,
+    password: hashedPassword
+  });
+
+  await user.save();
+
+  res.send("User registered successfully");
 });
 
-app.post("/message", async (req, res) => {
-  try {
-    const { question } = req.body;
-    const userQuestion = question.toLowerCase().trim();
+const jwt = require("jsonwebtoken");
 
-    let answer = "I am still learning...";
+// Login route
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-    const wisdomData = await Wisdom.find();
+  const user = await User.findOne({ email });
 
-    console.log("User Question:", userQuestion);
+  if (!user) return res.send("User not found");
 
-    for (let item of wisdomData) {
-      const keyword = item.keyword.toLowerCase();
+  // Compare passwords
+  const isMatch = await bcrypt.compare(password, user.password);
 
-      console.log("Checking:", keyword);
+  if (!isMatch) return res.send("Invalid credentials");
 
-      if (
-        userQuestion.includes(keyword) ||
-        (keyword === "anger" && userQuestion.includes("angry")) ||
-        (keyword === "jealous" && userQuestion.includes("jealousy")) ||
-        (keyword === "fear" && userQuestion.includes("afraid"))
-      ) {
-        console.log("MATCH FOUND:", keyword);
-        answer = item.teaching;
-        break; // VERY IMPORTANT
-      }
-    }
+  // Generate token
+  const token = jwt.sign({ id: user._id }, "secretkey");
 
-    const newMsg = new Message({
-      question,
-      answer
-    });
-
-    await newMsg.save();
-
-    res.json({ answer });
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Error");
-  }
+  res.json({ token });
+});
+// Test route
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
 
-app.get('/messages', async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ createdAt: -1 });
-    res.json(messages);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Error fetching messages");
-  }
+// Start server
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});// Import required modules
+const express = require("express"); // framework to create server
+const mongoose = require("mongoose"); // to connect MongoDB
+const cors = require("cors"); // allows frontend to communicate
+
+require("dotenv").config(); // to use environment variables
+
+const app = express();
+
+// Middleware
+app.use(express.json()); // parses incoming JSON data
+app.use(cors()); // enables cross-origin requests
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+const User = require("./models/User");
+const bcrypt = require("bcrypt");
+
+// Signup route
+app.post("/signup", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  // Hash password before saving
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = new User({
+    name,
+    email,
+    password: hashedPassword
+  });
+
+  await user.save();
+
+  res.send("User registered successfully");
 });
 
-app.delete('/message/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
+const jwt = require("jsonwebtoken");
 
-    const deletedMessage = await Message.findByIdAndDelete(id);
+// Login route
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-    if (!deletedMessage) {
-      return res.status(404).json({ message: "Message not found" });
-    }
+  const user = await User.findOne({ email });
 
-    res.json({ message: "Message deleted successfully" });
+  if (!user) return res.send("User not found");
 
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Error deleting message");
-  }
+  // Compare passwords
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) return res.send("Invalid credentials");
+
+  // Generate token
+  const token = jwt.sign({ id: user._id }, "secretkey");
+
+  res.json({ token });
+});
+// Test route
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
 
+// Start server
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });

@@ -5,4 +5,4 @@ const wisdomSchema = new mongoose.Schema({
   teaching: String
 });
 
-module.exports = mongoose.model('Wisdom', wisdomSchema);
+module.exports = mongoose.model('Wisdom', wisdomSchema , 'wisdom');

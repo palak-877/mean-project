@@ -21,17 +21,30 @@ app.get('/', (req, res) => {
 app.post("/message", async (req, res) => {
   try {
     const { question } = req.body;
-    const userQuestion = question.toLowerCase();
+    const userQuestion = question.toLowerCase().trim();
 
     let answer = "I am still learning...";
 
     const wisdomData = await Wisdom.find();
 
-    wisdomData.forEach(item => {
-      if (userQuestion.includes(item.keyword)) {
+    console.log("User Question:", userQuestion);
+
+    for (let item of wisdomData) {
+      const keyword = item.keyword.toLowerCase();
+
+      console.log("Checking:", keyword);
+
+      if (
+        userQuestion.includes(keyword) ||
+        (keyword === "anger" && userQuestion.includes("angry")) ||
+        (keyword === "jealous" && userQuestion.includes("jealousy")) ||
+        (keyword === "fear" && userQuestion.includes("afraid"))
+      ) {
+        console.log("MATCH FOUND:", keyword);
         answer = item.teaching;
+        break; // VERY IMPORTANT
       }
-    });
+    }
 
     const newMsg = new Message({
       question,

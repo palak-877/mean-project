@@ -34,6 +34,9 @@ app.post("/message", async (req, res) => {
 
     const wisdomData = await Wisdom.find();
 
+    console.log("User question:", userQuestion);
+    console.log("Wisdom data:", wisdomData);
+
     for (let item of wisdomData) {
       const keyword = item.keyword.toLowerCase();
 
@@ -103,7 +106,7 @@ app.post("/register", async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.send("User already exists");
+      return res.json({ message: "User already exists"});
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -115,7 +118,7 @@ app.post("/register", async (req, res) => {
 
     await newUser.save();
 
-    res.send("User registered successfully");
+    res.json({ message: "User registered successfully"});
 
   } catch (error) {
     console.log(error);
@@ -130,10 +133,10 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.send("User not found");
+    if (!user) return res.json({ message: "User not found"});
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.send("Invalid credentials");
+    if (!isMatch) return res.json({ message: "Invalid credentials"});
 
     const token = jwt.sign({ id: user._id }, "secretkey");
 

@@ -6,4 +6,4 @@ const wisdomSchema = new mongoose.Schema({
 });
 
 // 👇 FORCE collection name to "wisdoms"
-module.exports = mongoose.model('Wisdom', wisdomSchema, 'wisdoms');
+module.exports = mongoose.model('Wisdom', wisdomSchema, 'wisdom');

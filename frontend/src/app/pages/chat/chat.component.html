@@ -1,0 +1,45 @@
+<div class="container">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>History</h3>
+    <div class="history">
+      <div *ngFor="let msg of messages">
+        {{ msg.question }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Area -->
+  <div class="chat-area">
+
+    <!-- Header -->
+    <div class="header">
+      <h2>Wisdom GPT</h2>
+      <button (click)="logout()">Logout</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" #scrollContainer>
+      <div *ngFor="let msg of messages">
+
+        <div class="user-msg">
+          {{ msg.question }}
+        </div>
+
+        <div class="bot-msg">
+          {{ msg.answer }}
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <input [(ngModel)]="question" placeholder="Ask something..." />
+      <button (click)="send()">Send</button>
+    </div>
+
+  </div>
+
+</div>

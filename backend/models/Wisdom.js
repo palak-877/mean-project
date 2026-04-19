@@ -5,4 +5,5 @@ const wisdomSchema = new mongoose.Schema({
   teaching: String
 });
 
-module.exports = mongoose.model('Wisdom', wisdomSchema , 'wisdom');
+// 👇 FORCE collection name to "wisdoms"
+module.exports = mongoose.model('Wisdom', wisdomSchema, 'wisdoms');

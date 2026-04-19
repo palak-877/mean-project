@@ -1,22 +1,29 @@
-const Wisdom = require("./models/Wisdom");
-const Message = require("./models/Message");
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const Wisdom = require("./models/Wisdom");
+const Message = require("./models/Message");
+const User = require('./models/User');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// ✅ MongoDB connection
+// ✅ MongoDB connection (local)
 mongoose.connect('mongodb://127.0.0.1:27017/wisdomgpt')
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.log(err));
 
-app.get('/', (req, res) => {
-  res.send("Server running");
+// ✅ Test route
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
+
+// ================= CHATBOT =================
 
 app.post("/message", async (req, res) => {
   try {
@@ -27,12 +34,8 @@ app.post("/message", async (req, res) => {
 
     const wisdomData = await Wisdom.find();
 
-    console.log("User Question:", userQuestion);
-
     for (let item of wisdomData) {
       const keyword = item.keyword.toLowerCase();
-
-      console.log("Checking:", keyword);
 
       if (
         userQuestion.includes(keyword) ||
@@ -40,9 +43,8 @@ app.post("/message", async (req, res) => {
         (keyword === "jealous" && userQuestion.includes("jealousy")) ||
         (keyword === "fear" && userQuestion.includes("afraid"))
       ) {
-        console.log("MATCH FOUND:", keyword);
         answer = item.teaching;
-        break; // VERY IMPORTANT
+        break;
       }
     }
 
@@ -61,6 +63,8 @@ app.post("/message", async (req, res) => {
   }
 });
 
+// ================= GET ALL MESSAGES =================
+
 app.get('/messages', async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
@@ -70,6 +74,8 @@ app.get('/messages', async (req, res) => {
     res.status(500).send("Error fetching messages");
   }
 });
+
+// ================= DELETE MESSAGE =================
 
 app.delete('/message/:id', async (req, res) => {
   try {
@@ -89,31 +95,61 @@ app.delete('/message/:id', async (req, res) => {
   }
 });
 
+// ================= REGISTER =================
 
-// Login route
+app.post("/register", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.send("User already exists");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      email,
+      password: hashedPassword
+    });
+
+    await newUser.save();
+
+    res.send("User registered successfully");
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error");
+  }
+});
+
+// ================= LOGIN =================
+
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
+    if (!user) return res.send("User not found");
 
-  if (!user) return res.send("User not found");
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.send("Invalid credentials");
 
-  // Compare passwords
-  const isMatch = await bcrypt.compare(password, user.password);
+    const token = jwt.sign({ id: user._id }, "secretkey");
 
-  if (!isMatch) return res.send("Invalid credentials");
+    res.json({
+      message: "Login successful",
+      token
+    });
 
-  // Generate token
-  const token = jwt.sign({ id: user._id }, "secretkey");
-
-  res.json({ token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error");
+  }
 });
-// Test route
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
 
-// Start server
+// ================= START SERVER =================
+
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });

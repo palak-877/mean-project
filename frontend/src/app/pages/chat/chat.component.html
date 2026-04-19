@@ -3,10 +3,11 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <h3>History</h3>
+    <button class="new-chat-btn" (click)="newChat()">+ New Chat</button>
     <div class="history">
-      <div *ngFor="let msg of messages">
-        {{ msg.question }}
-      </div>
+      <div *ngFor="let item of history" class="history-item" (click)="openChat(item)">
+      {{ item.title }}
+    </div>
     </div>
   </div>
 
@@ -16,20 +17,15 @@
     <!-- Header -->
     <div class="header">
       <h2>Wisdom GPT</h2>
-      <button (click)="logout()">Logout</button>
+      <button (click)="logout()" class="logout-btn">Logout</button>
     </div>
 
     <!-- Messages -->
     <div class="messages" #scrollContainer>
       <div *ngFor="let msg of messages">
 
-        <div class="user-msg">
-          {{ msg.question }}
-        </div>
-
-        <div class="bot-msg">
-          {{ msg.answer }}
-        </div>
+        <p class="question"><b>You:</b> {{ msg.question }}</p>
+        <p class="answer"><b>AI:</b> {{ msg.answer }}</p>
 
       </div>
     </div>
@@ -37,7 +33,7 @@
     <!-- Input -->
     <div class="input-area">
       <input [(ngModel)]="question" placeholder="Ask something..." />
-      <button (click)="send()">Send</button>
+      <button (click)="sendMessage()">Send</button>
     </div>
 
   </div>

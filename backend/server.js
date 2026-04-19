@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const Wisdom = require("./models/Wisdom");
 const Message = require("./models/Message");
+const Conversation = require('./models/Conversation');
 const User = require('./models/User');
 
 const app = express();
@@ -27,7 +28,7 @@ app.get("/", (req, res) => {
 
 app.post("/message", async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, conversationId } = req.body;
     const userQuestion = question.toLowerCase().trim();
 
     let answer = "I am still learning...";
@@ -42,23 +43,36 @@ app.post("/message", async (req, res) => {
 
       if (
         userQuestion.includes(keyword) ||
-        (keyword === "anger" && userQuestion.includes("angry")) ||
+        (keyword === "anger" && (userQuestion.includes("angry") || userQuestion.includes("upset"))) ||
         (keyword === "jealous" && userQuestion.includes("jealousy")) ||
-        (keyword === "fear" && userQuestion.includes("afraid"))
+        (keyword === "fear" && (userQuestion.includes("afraid") || userQuestion.includes("scared")))
       ) {
         answer = item.teaching;
         break;
       }
     }
 
-    const newMsg = new Message({
-      question,
-      answer
+    let conversation;
+
+    // ✅ If conversation exists → append message
+    if (conversationId) {
+      conversation = await Conversation.findById(conversationId);
+      conversation.messages.push({ question, answer });
+      await conversation.save();
+    } 
+    // ✅ Else → create new conversation
+    else {
+      conversation = new Conversation({
+        title: question, // first question becomes title
+        messages: [{ question, answer }]
+      });
+      await conversation.save();
+    }
+
+    res.json({
+      answer,
+      conversationId: conversation._id
     });
-
-    await newMsg.save();
-
-    res.json({ answer });
 
   } catch (err) {
     console.log(err);
@@ -76,6 +90,11 @@ app.get('/messages', async (req, res) => {
     console.log(error);
     res.status(500).send("Error fetching messages");
   }
+});
+
+app.get("/conversations", async (req, res) => {
+  const chats = await Conversation.find().sort({ createdAt: -1 });
+  res.json(chats);
 });
 
 // ================= DELETE MESSAGE =================

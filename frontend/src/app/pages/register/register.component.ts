@@ -36,5 +36,9 @@ export class RegisterComponent {
       alert("Something went wrong");
     }
   });
+
+}
+  goToLogin() {
+  this.router.navigate(['/']);
 }
 }

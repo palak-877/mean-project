@@ -21,4 +21,8 @@ export class ApiService {
   sendMessage(data: any) {
     return this.http.post(`${this.baseUrl}/message`, data);
   }
+
+  getConversations() {
+  return this.http.get('http://localhost:3000/conversations');
+}
 }

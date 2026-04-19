@@ -1,14 +1,28 @@
-<h2>Login</h2>
+<div class="auth-container">
 
-<input type="email" [(ngModel)]="email" placeholder="Email">
-<br><br>
+  <div class="auth-card">
+    <h2>Welcome Back 👋</h2>
+    <p class="subtitle">Login to continue to Wisdom GPT</p>
 
-<input type="password" [(ngModel)]="password" placeholder="Password">
-<br><br>
+    <input 
+      type="email" 
+      placeholder="Email"
+      [(ngModel)]="email"
+    />
 
-<button (click)="login()">Login</button>
+    <input 
+      type="password" 
+      placeholder="Password"
+      [(ngModel)]="password"
+    />
 
-<p>
-  Don't have an account?
-  <a routerLink="/register">Register</a>
-</p>
+    <button (click)="login()">Login</button>
+
+    <p class="switch">
+      Don’t have an account?
+      <span (click)="goToRegister()">Register</span>
+    </p>
+
+  </div>
+
+</div>
